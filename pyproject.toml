@@ -1,0 +1,34 @@
+[project]
+name = "fw-gear-skeleton"
+version = "0.3.0"
+description = "{{description}}"
+authors = [{ name = "Flywheel", email = "support@flywheel.io" }]
+requires-python = "~=3.9"
+readme = "README.md"
+license = "MIT"
+keywords = [
+    "Flywheel",
+    "Gears",
+]
+classifiers = ["Topic :: Scientific/Engineering"]
+dependencies = [
+    "flywheel-sdk>=18,<19",
+    "fw-gear>=0.3.0,<0.4",
+]
+
+[project.urls]
+Repository = "https://gitlab.com/flywheel-io/flywheel-apps/templates/skeleton"
+
+[dependency-groups]
+dev = [
+    "pytest>=6.1.2,<7",
+    "pytest-cov>=3.0.0,<4",
+    "pytest-mock>=3.8.2,<4",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.ruff]
+lint.ignore-init-module-imports = true

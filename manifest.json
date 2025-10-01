@@ -1,0 +1,52 @@
+{
+  "author": "Flywheel",
+  "cite": "",
+  "command": "python run.py",
+  "config": {
+    "debug": {
+      "default": false,
+      "description": "Log debug messages",
+      "type": "boolean"
+    }
+  },
+  "custom": {
+    "flywheel": {
+      "classification": {
+        "function": [
+          "Other"
+        ]
+      },
+      "suite": "Other",
+      "show-job": true,
+      "uid": 31337,
+      "gid": 31337
+    },
+    "gear-builder": {
+      "category": "converter",
+      "image": "flywheel/skeleton:0.4.0-rc1"
+    }
+  },
+  "description": "{{ }}",
+  "environment": {
+    "PYTHONPATH": "/venv/lib/python/site-packages",
+    "PATH": "/venv/bin:/usr/local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/opt/bin",
+    "VIRTUAL_ENV": "/venv",
+    "FLYWHEEL": "/flywheel/v0"
+  },
+  "inputs": {
+    "{{text-input}}": {
+      "base": "file",
+      "description": "{{A text file.}}"
+    }
+  },
+  "label": "FW skeleton gear",
+  "license": "MIT",
+  "maintainer": "Flywheel <support@flywheel.io>",
+  "name": "skeleton",
+  "output_configuration": {
+    "enforce_file_version_match": true
+  },
+  "source": "https://gitlab.com/flywheel-io/scientific-solutions/etc/utlis/skeleton",
+  "url": "https://gitlab.com/flywheel-io/scientific-solutions/etc/utlis/skeleton",
+  "version": "0.4.0-rc1"
+}

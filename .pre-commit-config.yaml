@@ -1,0 +1,17 @@
+repos:
+  - repo: https://gitlab.com/flywheel-io/tools/etc/qa-ci
+    rev: sse
+    hooks:
+      - id: pyproject_export
+      - id: gearcheck
+      - id: eolfix
+      - id: hadolint  # Dockerfile linter (recommended)
+      - id: jsonlint
+      - id: linkcheck
+      - id: markdownlint
+      - id: yamllint
+      - id: ruff_format
+      - id: ruff
+        args: ["--config", "pyproject.toml"]
+      - id: ruff_tests
+      - id: pytest
