@@ -2,7 +2,7 @@
 # Base stage: set up environment and install system dependencies
 # -----------------------------------------------------------------------------
 
-FROM flywheel/python:3.12-main AS base
+FROM flywheel/python:3.12-wolfi-build AS base
 
 # Set environment variable for the application directory
 ENV FLYWHEEL="/flywheel/v0"
@@ -29,6 +29,9 @@ RUN uv pip install -r requirements.txt --no-cache-dir
 # Dev stage: install development dependencies and set up app in editable mode
 # -----------------------------------------------------------------------------
 FROM build AS dev
+# Install glibc-locale-posix for VS Code Server compatibility (provides getconf)
+RUN apk add --no-cache glibc-locale-posix
+
 # Copy and install development-specific requirements
 COPY requirements-dev.txt ${FLYWHEEL}/
 RUN uv pip install -r requirements-dev.txt --no-cache-dir
