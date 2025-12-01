@@ -1,6 +1,6 @@
 [project]
 name = "fw-gear-dbt-runner"
-version = "0.1.0-rc1"
+version = "0.1.0"
 description = "Run dbt projects on Flywheel datasets stored in external storage"
 authors = [{ name = "Flywheel", email = "support@flywheel.io" }]
 requires-python = ">=3.12"
