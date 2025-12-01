@@ -1,23 +1,29 @@
 [project]
-name = "fw-gear-skeleton"
-version = "0.3.0"
-description = "{{description}}"
+name = "fw-gear-dbt-runner"
+version = "0.1.0-rc1"
+description = "Run dbt projects on Flywheel datasets stored in external storage"
 authors = [{ name = "Flywheel", email = "support@flywheel.io" }]
-requires-python = "~=3.9"
+requires-python = ">=3.12"
 readme = "README.md"
 license = "MIT"
 keywords = [
     "Flywheel",
     "Gears",
+    "dbt",
+    "data transformation",
 ]
 classifiers = ["Topic :: Scientific/Engineering"]
 dependencies = [
     "flywheel-sdk>=18,<19",
     "fw-gear>=0.3.0,<0.4",
+    "dbt-core>=1.9.0,<2.0",
+    "dbt-duckdb>=1.9.0,<2.0",
+    "fw-storage>=3,<4",
+    "fw-client>=2,<3",
 ]
 
 [project.urls]
-Repository = "https://gitlab.com/flywheel-io/flywheel-apps/templates/skeleton"
+Repository = "https://gitlab.com/flywheel-io/scientific-solutions/gears/dbt-runner"
 
 [dependency-groups]
 dev = [
@@ -29,6 +35,9 @@ dev = [
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["fw_gear_dbt_runner"]
 
 [tool.ruff]
 lint.ignore-init-module-imports = true

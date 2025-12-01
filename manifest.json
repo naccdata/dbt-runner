@@ -7,46 +7,82 @@
       "default": false,
       "description": "Log debug messages",
       "type": "boolean"
+    },
+    "storage_label": {
+      "type": "string",
+      "description": "Label of the Flywheel external storage containing source and output data"
+    },
+    "source_prefix": {
+      "type": "string",
+      "description": "Path prefix within external storage where source Flywheel dataset files are located"
+    },
+    "output_prefix": {
+      "type": "string",
+      "description": "Path prefix within external storage where transformed output tables will be written"
     }
   },
   "custom": {
     "flywheel": {
       "classification": {
         "function": [
-          "Other"
+          "Export"
         ]
       },
-      "suite": "Other",
+      "suite": "Utility",
       "show-job": true,
       "uid": 31337,
       "gid": 31337
     },
     "gear-builder": {
-      "category": "converter",
-      "image": "flywheel/skeleton:0.4.0-rc1"
+      "category": "analysis",
+      "image": "flywheel/dbt-runner:0.1.0-rc.2"
     }
   },
-  "description": "{{ }}",
+  "description": "Run dbt (data build tool) projects on Flywheel datasets stored in external storage. Transforms source parquet files using user-defined dbt models and outputs results back to external storage.",
   "environment": {
-    "PYTHONPATH": "/venv/lib/python/site-packages",
-    "PATH": "/venv/bin:/usr/local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/opt/bin",
+    "PYTHONPATH": "/venv/lib/python3.12/site-packages",
+    "PATH": "/venv/bin:/usr/local/sbin:/usr/local/bin:/usr/bin:/usr/sbin:/sbin:/bin:/opt/bin",
     "VIRTUAL_ENV": "/venv",
-    "FLYWHEEL": "/flywheel/v0"
+    "FLYWHEEL": "/flywheel/v0",
+    "UV_COMPILE_BYTECODE": "1",
+    "BUILD_TIME": "2025-11-25T17:39:46Z",
+    "PWD": "/flywheel/v0",
+    "TZ": "UTC",
+    "UV_PYTHON": "/venv/bin/python",
+    "UV_NO_CACHE": "1",
+    "COMMIT_REF": "main",
+    "UV_LINK_MODE": "copy",
+    "COMMIT_SHA": "b183e8f7",
+    "SHLVL": "0",
+    "PYTHONDONTWRITEBYTECODE": "1",
+    "CI_JOB_URL": "https://gitlab.com/flywheel-io/tools/img/python/-/jobs/12215762326",
+    "SSL_CERT_FILE": "/etc/ssl/certs/ca-certificates.crt",
+    "UV_PYTHON_DOWNLOADS": "never",
+    "_": "/usr/bin/printenv"
   },
   "inputs": {
-    "{{text-input}}": {
+    "dbt_project_zip": {
       "base": "file",
-      "description": "{{A text file.}}"
+      "description": "Zip file containing a complete dbt project with dbt_project.yml, profiles.yml, models/, and other dbt files",
+      "type": {
+        "enum": [
+          "archive"
+        ]
+      }
+    },
+    "api-key": {
+      "base": "api-key",
+      "read-only": true
     }
   },
-  "label": "FW skeleton gear",
+  "label": "dbt Runner",
   "license": "MIT",
   "maintainer": "Flywheel <support@flywheel.io>",
-  "name": "skeleton",
+  "name": "dbt-runner",
   "output_configuration": {
     "enforce_file_version_match": true
   },
-  "source": "https://gitlab.com/flywheel-io/scientific-solutions/etc/utlis/skeleton",
-  "url": "https://gitlab.com/flywheel-io/scientific-solutions/etc/utlis/skeleton",
-  "version": "0.4.0-rc1"
+  "source": "https://gitlab.com/flywheel-io/scientific-solutions/gears/dbt-runner",
+  "url": "https://gitlab.com/flywheel-io/scientific-solutions/gears/dbt-runner",
+  "version": "0.1.0-rc.2"
 }
