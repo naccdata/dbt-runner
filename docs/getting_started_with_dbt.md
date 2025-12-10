@@ -81,32 +81,43 @@ mkdir -p target/main
 
 ### 1.6 Create a sources configuration (`models/sources.yml`)
 
+dbt sources allow you to document and reference your raw data tables. With the
+dbt-duckdb adapter, the `external_location` in metadata tells dbt where to find
+the parquet files, and you can reference them using `{{ source() }}` in your models.
+
 ```yaml
 version: 2
 
 sources:
   - name: flywheel_raw
     description: Raw Flywheel dataset tables
+    meta:
+      external_location: "../source_data/tables/{name}/*.parquet"
 
     tables:
       - name: subjects
         description: Subject-level data
-        meta:
-          external_location: "../source_data/tables/subjects/*.parquet"
 
       - name: sessions
         description: Session-level data
-        meta:
-          external_location: "../source_data/tables/sessions/*.parquet"
 
       - name: files
         description: File metadata
-        meta:
-          external_location: "../source_data/tables/files/*.parquet"
-
-**Note:** The `../` prefix references the parent directory where `source_data/`
-is located, matching the gear's directory structure.
 ```
+
+**Note:** The `external_location` at the source level uses `{name}` as a
+placeholder that gets replaced with each table name. This keeps the configuration
+DRY. The `../` prefix references the parent directory where `source_data/` is
+located, matching the gear's directory structure.
+
+**Benefits of using sources:**
+
+- **Documentation**: Central place to document raw data tables
+- **Lineage**: dbt tracks how data flows from sources to models
+- **Testing**: Add data quality tests on source tables
+- **Maintainability**: Update paths in one place instead of across multiple models
+- **Alternative**: You can also use direct `read_parquet()` calls in your SQL,
+  but sources are the recommended dbt best practice
 
 ### 1.7 Create a simple staging model (`models/staging/stg_subjects.sql`)
 
@@ -120,10 +131,13 @@ SELECT
     "parents.group" AS group_id,
     created,
     modified
-FROM read_parquet('../source_data/tables/subjects/*.parquet')
+FROM {{ source('flywheel_raw', 'subjects') }}
 ```
 
-**Note:** The `../source_data/` path references the parent directory.
+**Note:** The `{{ source('flywheel_raw', 'subjects') }}` function references the
+source defined in `sources.yml`. dbt-duckdb uses the `external_location` metadata
+to generate a `read_parquet()` call automatically. This approach provides better
+documentation, lineage tracking, and allows you to add source tests.
 
 ### 1.8 Create a mart model (`models/marts/subject_summary.sql`)
 
@@ -141,7 +155,7 @@ WITH subject_sessions AS (
     SELECT
         "parents.subject" AS subject_id,
         COUNT(*) AS session_count
-    FROM read_parquet('../source_data/tables/sessions/*.parquet')
+    FROM {{ source('flywheel_raw', 'sessions') }}
     GROUP BY "parents.subject"
 )
 
@@ -546,9 +560,26 @@ may not be under `target/`, and the gear won't upload the output.
 
 ### Source Data Requirements
 
-**Path format**: All source data references must use `../source_data/` prefix.
+**Recommended approach**: Use `{{ source() }}` function with sources defined in
+`sources.yml`. This provides better documentation, lineage tracking, and testing:
 
-**Why**: The gear creates this directory structure:
+```sql
+-- Recommended: Use dbt sources
+FROM {{ source('flywheel_raw', 'subjects') }}
+```
+
+**Alternative approach**: Direct `read_parquet()` calls also work but require
+manual path management:
+
+```sql
+-- Also works: Direct parquet reading
+FROM read_parquet('../source_data/tables/subjects/*.parquet')
+```
+
+**Path requirements**: Whether using sources or direct calls, all paths must:
+
+- Use `../source_data/` prefix to reference the sibling directory
+- Match the gear's directory structure:
 
 ```text
 work/
@@ -556,14 +587,13 @@ work/
 └── source_data/          # Downloaded dataset (sibling to project)
 ```
 
-Models must reference data in the sibling directory using relative paths:
+**Common mistakes**:
 
 ```sql
--- Correct
-FROM read_parquet('../source_data/tables/subjects/*.parquet')
-
--- Incorrect (will fail)
+-- Incorrect (missing ../)
 FROM read_parquet('source_data/tables/subjects/*.parquet')
+
+-- Incorrect (absolute paths)
 FROM read_parquet('/absolute/path/subjects/*.parquet')
 ```
 

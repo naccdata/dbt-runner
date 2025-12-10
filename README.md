@@ -338,7 +338,8 @@ of progress.
   not uploaded. The gear returns an error and no outputs are written to external
   storage.
 - **File size constraints**: Very large model outputs may encounter memory limits
-  within the gear container.
+  within the gear container. Reaching out to Flywheel support is recommended for
+  large datasets so that appropriate resources can be allocated.
 
 ## FAQ
 
