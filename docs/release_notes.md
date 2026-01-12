@@ -1,20 +1,20 @@
 # Release Notes
 
-## Version 0.1.1-rc1
+## Version 0.1.1
 
-### Bug Fixes
+__Bug Fixes__:
 
 - Fixed output file type for .sql files in the compiled directory to be set as
   "source code" so they open in the native editor instead of as generic files
 
-### Maintenance
+__Maintenance__:
 
 - Fixed markdown line length violations in CONTRIBUTING.md and
   docs/getting_started_with_dbt.md to comply with markdownlint 80-character limit
 
-## Version 0.1.0-rc1
+## Version 0.1.0
 
-### Enhancements
+__Enhancements__:
 
 - Added automatic creation of target subdirectories before dbt runs to prevent
   "directory does not exist" errors when models specify nested output locations
@@ -40,7 +40,7 @@
 - Created comprehensive README documentation with usage examples, workflow diagrams,
   and use cases
 
-### Bug Fixes
+__Bug Fixes__:
 
 - Fixed storage upload API to use correct `set()` method instead of non-existent
   `put()` method for fw-storage compatibility with Google Cloud Storage and other
@@ -48,7 +48,7 @@
 - Fixed test mock configuration to properly handle nested GearContext attribute
   access for API key retrieval
 
-### Maintenance
+__Maintenance__:
 
 - Simplified GearContext import in run.py by removing unnecessary aliasing from
   GearToolkitContext
