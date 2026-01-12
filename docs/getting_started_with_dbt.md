@@ -55,7 +55,8 @@ models:
 instead of storing them in the DuckDB database. We set `+materialized: external`
 at the project level for marts, but each model should also specify its output
 `location` using `{{ config() }}` in the SQL file (see example in step 1.8).
-This ensures parquet files are written to the `target/` directory in an organized way.
+This ensures parquet files are written to the `target/` directory in an
+organized way.
 
 ### 1.4 Create `profiles.yml`
 
@@ -157,9 +158,10 @@ FROM {{ ref('stg_subjects') }} s
 LEFT JOIN subject_sessions ss ON s.subject_id = ss.subject_id
 ```
 
-**Note:** The `{{ config() }}` block at the top specifies that this model should be
-materialized as an external parquet file at the specified location. Each model that
-should output to parquet needs its own config block with the full path.
+**Note:** The `{{ config() }}` block at the top specifies that this model
+should be materialized as an external parquet file at the specified location.
+Each model that should output to parquet needs its own config block with the
+full path.
 
 ## Step 2: Test Locally
 

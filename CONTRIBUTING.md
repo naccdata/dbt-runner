@@ -52,10 +52,10 @@ repositories. Default hooks to run on each commit:
 * pyproject_export: Export python dependencies
   from `pyproject.toml` to `requirements.txt` with `uv`.
 * gearcheck: Screen/fix common problems in flywheel gears.
-* eolfix: Fix text files (i.e.: any source code) to enforce LF line endings and to ensure
-  a single LF at EOF (no more, no less).
-* hadolint: Lint Dockerfile to enforce best practices with hadolint. Uses shellcheck under
-  the hood to lint the RUN instructions as well.
+* eolfix: Fix text files (i.e.: any source code) to enforce LF line endings
+  and to ensure a single LF at EOF (no more, no less).
+* hadolint: Lint Dockerfile to enforce best practices with hadolint. Uses
+  shellcheck under the hood to lint the RUN instructions as well.
 * jsonlint: Lint JSON files for syntax, uniform indentation and style with jsonlint.
   Formats .json files in-place to consistently use 2 spaces for indentation.
 * linkcheck: Check text files for dead links with a custom qa-ci script `linkcheck.py`.
@@ -63,8 +63,9 @@ repositories. Default hooks to run on each commit:
   with `markdownlint`.
 * yamllint: Lint YAML files for syntax, uniform indentation and style with yamllint.
 * ruff_format: Format python code with ruff to ensure uniform whitespace and style.
-* ruff: Format python code with `ruff` to ensures uniform whitespace and style. You can
-  define the configuration in the `pyproject.toml`, in the `tool.ruff` section.
+* ruff: Format python code with `ruff` to ensures uniform whitespace and
+  style. You can define the configuration in the `pyproject.toml`, in the
+  `tool.ruff` section.
 * ruff_tests: Lint python tests using less strict defaults with static analyzer `ruff`.
 * pytest: Build the Gear Docker image and run python tests and report code coverage
   with `pytest`.
@@ -80,7 +81,8 @@ More hooks can be enabled upon need. List of available
 * Run hooks manually:
   * Run on all files: `pre-commit run -a`
   * Run on certain files: `pre-commit run --files test/*`
-  * Run a specific pre-commit hook (`pytest` in this case): `pre-commit run --all-files pytest`
+  * Run a specific pre-commit hook (`pytest` in this case):
+    `pre-commit run --all-files pytest`
 * Update (e.g. clean and install) hooks: `pre-commit clean && pre-commit install`
 * Disable all hooks: `pre-commit uninstall`
 * Enable all hooks: `pre-commit install`

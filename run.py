@@ -3,6 +3,7 @@
 
 import logging
 import sys
+from pathlib import Path
 
 from fw_gear import GearContext
 
@@ -16,6 +17,26 @@ def main(context: GearContext) -> None:  # pragma: no cover
     """Parse gear config and run dbt runner workflow."""
     config = parse_config(context)
     exit_code = run(config, context)
+
+    # Set file.type for .sql files in the compiled directory
+    if exit_code == 0:
+        output_path = Path(context.output_dir)
+        compiled_dir = output_path / "compiled"
+
+        if compiled_dir.exists():
+            sql_files = list(compiled_dir.rglob("*.sql"))
+            for sql_file in sql_files:
+                relative_path = sql_file.relative_to(output_path)
+                try:
+                    context.metadata.update_file_metadata(
+                        str(relative_path),
+                        container_type="analysis",
+                        type="source code",
+                    )
+                    log.info(f"Set file type for {relative_path}")
+                except Exception as e:
+                    log.warning(f"Failed to set metadata for {relative_path}: {e}")
+
     sys.exit(exit_code)
 
 

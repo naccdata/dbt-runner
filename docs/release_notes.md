@@ -1,5 +1,17 @@
 # Release Notes
 
+## Version 0.1.1-rc1
+
+### Bug Fixes
+
+- Fixed output file type for .sql files in the compiled directory to be set as
+  "source code" so they open in the native editor instead of as generic files
+
+### Maintenance
+
+- Fixed markdown line length violations in CONTRIBUTING.md and
+  docs/getting_started_with_dbt.md to comply with markdownlint 80-character limit
+
 ## Version 0.1.0-rc1
 
 ### Enhancements
