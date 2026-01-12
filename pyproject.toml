@@ -14,12 +14,12 @@ keywords = [
 ]
 classifiers = ["Topic :: Scientific/Engineering"]
 dependencies = [
-    "flywheel-sdk>=18,<19",
     "fw-gear>=0.3.0,<0.4",
     "dbt-core>=1.9.0,<2.0",
     "dbt-duckdb>=1.9.0,<2.0",
     "fw-storage>=3,<4",
     "fw-client>=2,<3",
+    "urllib3>=2.6.0",
 ]
 
 [project.urls]
