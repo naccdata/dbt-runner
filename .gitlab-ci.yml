@@ -2,6 +2,9 @@ include:
   - project: flywheel-io/tools/etc/qa-ci
     ref: sse
     file: ci/gear.yml
+  - project: flywheel-io/architecture/research/claude-code
+    file: ci/claude-code.yml
+    ref: sse
 
 variables:
   PYVER: "3.12"
@@ -9,3 +12,10 @@ variables:
   DEBUG: ""  # Set debug mode to print out executed command on qa-ci
   PUBLISH_POETRY: "false"  # Set to true to allow CI to publish package to PYPI
   VALIDATE_CLASSIFICATION: "true"
+  AUTO_RELEASE_NOTES: "true"
+
+release-notes:claude:
+  extends: .release-notes:claude
+
+release-notes:claude:bulk:
+  extends: .release-notes:claude:bulk
