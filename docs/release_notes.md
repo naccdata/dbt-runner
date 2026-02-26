@@ -1,5 +1,37 @@
 # Release Notes
 
+## 0.2.0
+
+__Enhancements__:
+
+- Upload selection is now user-configurable via dbt `meta.upload`
+  instead of relying on hardcoded materialization type and glob
+  patterns. Each model can declare
+  `meta: {upload: "path/relative/to/target"}` to opt into upload,
+  giving dbt project authors full control over what gets uploaded
+- Supports any materialization type (external, table, Python models)
+  as long as the model declares `meta.upload`
+
+__Breaking Changes__:
+
+- Models using `materialized='external'` are no longer automatically
+  uploaded. All models that should be uploaded must now declare
+  `meta: {upload: "<path>"}` in their config
+- The fallback glob search for `*.parquet` files under `target/` has
+  been removed
+- The hardcoded `target/schemas/*.schema.json` upload has been
+  removed. Python models must declare `meta.upload` to be uploaded
+
+__Maintenance__:
+
+- Removed `_find_external_model_outputs`,
+  `_find_schema_json_outputs`, and
+  `_parse_external_models_from_manifest` in favor of a single
+  manifest-driven `_find_uploadable_outputs` function
+- Added comprehensive unit tests for the new upload discovery logic
+  covering string paths, non-string values, missing files, node-level
+  meta, and non-model nodes
+
 ## 0.1.1 [2026-01-12]
 
 __Fixes__:

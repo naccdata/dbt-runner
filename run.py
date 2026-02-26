@@ -29,11 +29,11 @@ def main(context: GearContext) -> None:  # pragma: no cover
                 relative_path = sql_file.relative_to(output_path)
                 try:
                     context.metadata.update_file_metadata(
-                        str(relative_path),
+                        sql_file.name,
                         container_type="analysis",
                         type="source code",
                     )
-                    log.info(f"Set file type for {relative_path}")
+                    log.info(f"Set file type for {sql_file.name}")
                 except Exception as e:
                     log.warning(f"Failed to set metadata for {relative_path}: {e}")
 
