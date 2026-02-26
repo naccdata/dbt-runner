@@ -35,29 +35,29 @@
     },
     "gear-builder": {
       "category": "analysis",
-      "image": "flywheel/dbt-runner:0.1.1"
+      "image": "flywheel/dbt-runner:0.2.0-rc.1"
     }
   },
   "description": "Run dbt (data build tool) projects on Flywheel datasets stored in external storage. Transforms source parquet files using user-defined dbt models and outputs results back to external storage.",
   "environment": {
-    "PYTHONPATH": "/venv/lib/python3.12/site-packages",
-    "PATH": "/venv/bin:/usr/local/sbin:/usr/local/bin:/usr/bin:/usr/sbin:/sbin:/bin:/opt/bin",
-    "VIRTUAL_ENV": "/venv",
-    "FLYWHEEL": "/flywheel/v0",
-    "UV_COMPILE_BYTECODE": "1",
-    "BUILD_TIME": "2025-11-25T17:39:46Z",
-    "PWD": "/flywheel/v0",
-    "TZ": "UTC",
-    "UV_PYTHON": "/venv/bin/python",
-    "UV_NO_CACHE": "1",
+    "BUILD_TIME": "2026-02-25T00:08:03Z",
+    "CI_JOB_URL": "https://gitlab.com/flywheel-io/tools/img/python/-/jobs/13250727830",
     "COMMIT_REF": "main",
-    "UV_LINK_MODE": "copy",
-    "COMMIT_SHA": "b183e8f7",
-    "SHLVL": "0",
+    "COMMIT_SHA": "f1a5d49a",
+    "FLYWHEEL": "/flywheel/v0",
+    "PATH": "/venv/bin:/usr/local/sbin:/usr/local/bin:/usr/bin:/usr/sbin:/sbin:/bin:/opt/bin",
+    "PWD": "/flywheel/v0",
     "PYTHONDONTWRITEBYTECODE": "1",
-    "CI_JOB_URL": "https://gitlab.com/flywheel-io/tools/img/python/-/jobs/12215762326",
+    "PYTHONPATH": "/venv/lib/python3.12/site-packages",
+    "SHLVL": "0",
     "SSL_CERT_FILE": "/etc/ssl/certs/ca-certificates.crt",
+    "TZ": "UTC",
+    "UV_COMPILE_BYTECODE": "1",
+    "UV_LINK_MODE": "copy",
+    "UV_NO_CACHE": "1",
+    "UV_PYTHON": "/venv/bin/python",
     "UV_PYTHON_DOWNLOADS": "never",
+    "VIRTUAL_ENV": "/venv",
     "_": "/usr/bin/printenv"
   },
   "inputs": {
@@ -84,5 +84,5 @@
   },
   "source": "https://gitlab.com/flywheel-io/scientific-solutions/gears/dbt-runner",
   "url": "https://gitlab.com/flywheel-io/scientific-solutions/gears/dbt-runner",
-  "version": "0.1.1"
+  "version": "0.2.0-rc.1"
 }

@@ -1,5 +1,5 @@
 atomicwrites==1.4.1 ; sys_platform == 'win32'
-coverage==7.13.1
+coverage==7.13.4
 iniconfig==2.3.0
 pluggy==1.6.0
 py==1.11.0

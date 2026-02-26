@@ -247,47 +247,6 @@ def _save_dbt_artifacts(dbt_target_dir: Path, gear_output_dir: Path) -> None:
     log.info("dbt artifacts saved successfully")
 
 
-def _parse_external_models_from_manifest(manifest_path: Path) -> List[dict]:
-    """Parse manifest.json to extract external model configurations.
-
-    Args:
-        manifest_path: Path to manifest.json
-
-    Returns:
-        List of dicts with 'name' and 'location' keys for external models
-    """
-    try:
-        with open(manifest_path, "r") as f:
-            manifest = json.load(f)
-
-        log.info("Reading manifest.json to find external model outputs")
-        nodes = manifest.get("nodes", {})
-        external_models = []
-
-        for node_data in nodes.values():
-            if (
-                node_data.get("resource_type") == "model"
-                and node_data.get("config", {}).get("materialized") == "external"
-            ):
-                location = node_data.get("config", {}).get("location")
-                if location:
-                    external_models.append(
-                        {"name": node_data.get("name"), "location": location}
-                    )
-
-        log.info(f"Found {len(external_models)} external models in manifest")
-        return external_models
-
-    except FileNotFoundError:
-        log.warning(f"manifest.json not found at {manifest_path}")
-    except json.JSONDecodeError as e:
-        log.warning(f"Failed to parse manifest.json: {e}")
-    except Exception as e:
-        log.warning(f"Error reading manifest.json: {e}")
-
-    return []
-
-
 def _resolve_model_path(location: str, project_root: Path) -> Path:
     """Resolve model location to an absolute path.
 
@@ -303,48 +262,80 @@ def _resolve_model_path(location: str, project_root: Path) -> Path:
     return project_root / location
 
 
-def _find_external_model_outputs(
-    dbt_target_dir: Path, project_root: Path
-) -> List[Path]:
-    """Find all external model outputs by reading manifest.json.
-
-    This function reads the dbt manifest to find models with external
-    materialization and returns paths to their output files.
+def _load_manifest(manifest_path: Path) -> dict | None:
+    """Load and parse a dbt manifest.json file.
 
     Args:
-        dbt_target_dir: Directory containing dbt target outputs
+        manifest_path: Path to manifest.json
+
+    Returns:
+        Parsed manifest dict, or None if the file is missing or invalid.
+    """
+    try:
+        with open(manifest_path, "r") as f:
+            return json.load(f)
+    except FileNotFoundError:
+        log.warning(f"manifest.json not found at {manifest_path}")
+        return None
+    except json.JSONDecodeError as e:
+        log.warning(f"Failed to parse manifest.json: {e}")
+        return None
+
+
+def _find_uploadable_outputs(manifest: dict, project_root: Path) -> List[tuple]:
+    """Find model outputs marked for upload via meta.upload in a manifest.
+
+    Selects models whose `meta` contains an `upload` key with a string
+    path relative to `target/`.
+
+    Args:
+        manifest: Parsed dbt manifest dict (as from manifest.json)
         project_root: Root directory of the dbt project
 
     Returns:
-        List of paths to parquet files created by external models
+        List of (resolved_path, relative_upload_path) tuples
     """
-    manifest_path = dbt_target_dir / "manifest.json"
-    parquet_files = []
+    nodes = manifest.get("nodes", {})
+    outputs = []
 
-    # Parse external models from manifest
-    external_models = _parse_external_models_from_manifest(manifest_path)
+    for node_id, node_data in nodes.items():
+        if node_data.get("resource_type") != "model":
+            continue
 
-    # Convert locations to absolute paths and verify they exist
-    for model in external_models:
-        parquet_path = _resolve_model_path(model["location"], project_root)
+        # meta can live at node level or inside config
+        meta = node_data.get("config", {}).get("meta", {})
+        if not meta:
+            meta = node_data.get("meta", {})
 
-        if parquet_path.exists():
-            parquet_files.append(parquet_path)
-            log.info(f"Found external model output: {model['name']} at {parquet_path}")
+        upload_value = meta.get("upload")
+        if upload_value is None:
+            continue
+
+        model_name = node_data.get("name", node_id)
+
+        if not isinstance(upload_value, str):
+            log.warning(
+                f"Model '{model_name}' has meta.upload={upload_value!r} "
+                f"(type {type(upload_value).__name__}); expected a string "
+                f"path relative to target/. Skipping."
+            )
+            continue
+
+        # Resolve to absolute path (upload value is relative to target/)
+        target_dir = project_root / "target"
+        resolved = _resolve_model_path(upload_value, target_dir)
+
+        if resolved.exists():
+            log.info(f"Found uploadable output: {model_name} -> {upload_value}")
+            outputs.append((resolved, upload_value))
         else:
             log.warning(
-                f"External model {model['name']} location not found: {parquet_path}"
+                f"Model '{model_name}' declares meta.upload="
+                f"'{upload_value}' but file not found: {resolved}"
             )
 
-    # Fallback: recursively find all parquet files under target/
-    if not parquet_files:
-        log.info("Falling back to recursive parquet file search in target directory")
-        for parquet_file in dbt_target_dir.rglob("*.parquet"):
-            if not parquet_file.name.endswith(".duckdb"):
-                parquet_files.append(parquet_file)
-                log.info(f"Found parquet file: {parquet_file}")
-
-    return parquet_files
+    log.info(f"Found {len(outputs)} uploadable output(s) in manifest")
+    return outputs
 
 
 def _upload_external_model_outputs(
@@ -353,7 +344,7 @@ def _upload_external_model_outputs(
     storage_manager: StorageManager,
     output_prefix: str,
 ) -> None:
-    """Upload external model outputs to storage preserving subdirectory structure.
+    """Upload model outputs marked with meta.upload to external storage.
 
     Args:
         dbt_target_dir: Directory containing dbt target outputs
@@ -361,24 +352,17 @@ def _upload_external_model_outputs(
         storage_manager: Storage manager instance for uploads
         output_prefix: Path prefix in storage where files will be written
     """
-    parquet_files = _find_external_model_outputs(dbt_target_dir, project_root)
+    manifest_path = dbt_target_dir / "manifest.json"
+    manifest = _load_manifest(manifest_path)
+    if manifest is None:
+        return
+    outputs = _find_uploadable_outputs(manifest, project_root)
 
-    if parquet_files:
-        log.info(f"Found {len(parquet_files)} parquet file(s) to upload")
-        for parquet_file in parquet_files:
-            # Calculate relative path to preserve subdirectory structure
-            try:
-                # Try to get path relative to target directory
-                relative_path = parquet_file.relative_to(dbt_target_dir)
-            except ValueError:
-                # If file is not under target dir, use relative to project root
-                try:
-                    relative_path = parquet_file.relative_to(project_root)
-                except ValueError:
-                    # Fallback to just the filename
-                    relative_path = parquet_file.name
+    if not outputs:
+        log.info("No models declared meta.upload — nothing to upload")
+        return
 
-            log.info(f"Uploading {relative_path} to external storage")
-            storage_manager.upload_file(parquet_file, output_prefix, str(relative_path))
-    else:
-        log.warning("No external model outputs found to upload")
+    log.info(f"Uploading {len(outputs)} file(s) to external storage")
+    for resolved_path, relative_path in outputs:
+        log.info(f"Uploading {relative_path} to external storage")
+        storage_manager.upload_file(resolved_path, output_prefix, str(relative_path))

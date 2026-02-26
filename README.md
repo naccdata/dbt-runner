@@ -6,8 +6,6 @@
 
 *[Usage](#usage)*
 
-*[FAQ](#faq)*
-
 ### Summary
 
 The dbt Runner gear enables users to run dbt (data build tool) projects on Flywheel
@@ -276,30 +274,31 @@ of progress.
 
 ### Model Output Requirements
 
-- **Target directory**: External models **must** output to the `target/` directory
-  within the dbt project. The gear only uploads files found under `target/`.
-- **Location configuration**: Each model with `materialized='external'` **must**
-  specify a `location` in its config block (e.g.,
-  `location='target/main/model_name.parquet'`).
-- **Subfolder structure**: Subdirectories under `target/` are preserved when
-  uploading to external storage. For example, a model at
-  `target/main/subject_summary.parquet` will be uploaded to
-  `{output_prefix}/main/subject_summary.parquet`.
-- **Auto-creation**: Target subdirectories are automatically created before dbt
-  runs by scanning model files for location configurations.
+- **Upload opt-in via `meta.upload`**: Models must declare
+  `meta: {upload: "<path>"}` in their config to be uploaded. The path
+  is relative to `target/`. Models without `meta.upload` are not
+  uploaded.
+- **String paths only**: The `meta.upload` value must be a string.
+  Non-string values (e.g. `True`) are logged as a warning and skipped.
+- **Subfolder structure**: The `meta.upload` path is used as the
+  relative path in external storage. For example,
+  `meta: {upload: 'main/summary.parquet'}` uploads to
+  `{output_prefix}/main/summary.parquet`.
+- **Auto-creation**: Target subdirectories are automatically created
+  before dbt runs by scanning model files for location configurations.
 
 ### Supported Features
 
-- **Materialization types**: The gear uploads only models with
-  `materialized='external'`. Other materialization types (view, table, incremental)
-  remain in the DuckDB database and are not uploaded.
-- **dbt adapter**: Only the dbt-duckdb adapter is supported. Other adapters
-  (Snowflake, BigQuery, etc.) are not compatible.
-- **Data formats**: Source data must be in Parquet format. CSV, JSON, and other
-  formats require preprocessing.
-- **Dataset schema**: Source data must follow the Flywheel dataset schema with a
-  `tables/` directory containing container-level subdirectories (subjects/,
-  sessions/, etc.).
+- **Upload control**: Any model that declares `meta.upload` is
+  uploaded, regardless of materialization type. This works with
+  `external`, `table`, and Python models.
+- **dbt adapter**: Only the dbt-duckdb adapter is supported. Other
+  adapters (Snowflake, BigQuery, etc.) are not compatible.
+- **Data formats**: Source data must be in Parquet format. CSV, JSON,
+  and other formats require preprocessing.
+- **Dataset schema**: Source data must follow the Flywheel dataset
+  schema with a `tables/` directory containing container-level
+  subdirectories (subjects/, sessions/, etc.).
 
 ### Source Data References
 
@@ -340,10 +339,6 @@ of progress.
 - **File size constraints**: Very large model outputs may encounter memory limits
   within the gear container. Reaching out to Flywheel support is recommended for
   large datasets so that appropriate resources can be allocated.
-
-## FAQ
-
-[FAQ.md](FAQ.md)
 
 ## Contributing
 

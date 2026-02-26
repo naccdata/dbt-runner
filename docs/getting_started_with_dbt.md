@@ -146,7 +146,8 @@ documentation, lineage tracking, and allows you to add source tests.
 {{
     config(
         materialized='external',
-        location='target/main/subject_summary.parquet'
+        location='target/main/subject_summary.parquet',
+        meta={'upload': 'main/subject_summary.parquet'}
     )
 }}
 
@@ -174,8 +175,9 @@ LEFT JOIN subject_sessions ss ON s.subject_id = ss.subject_id
 
 **Note:** The `{{ config() }}` block at the top specifies that this model
 should be materialized as an external parquet file at the specified location.
-Each model that should output to parquet needs its own config block with the
-full path.
+The `meta.upload` key tells the gear to upload this file to external storage.
+The value is the path relative to `target/`. Models without `meta.upload`
+are not uploaded.
 
 ## Step 2: Test Locally
 
@@ -452,8 +454,10 @@ dbt Runner Gear - Completed successfully
 **External storage:**
 
 - Navigate to the `output_prefix` location in your external storage
-- The gear uploads all parquet files from the `target/` directory (organized by schema)
-- Each model materialized with `external` creates a separate parquet file
+- The gear uploads all models that declare `meta.upload` in their
+  config
+- Each uploaded file uses the `meta.upload` path as its relative
+  location under `output_prefix`
 
 **Example output structure:**
 
@@ -475,29 +479,59 @@ These parquet files contain your transformed data and can be:
 Understanding the gear's assumptions and limitations will help you design effective
 dbt projects and avoid common pitfalls.
 
-### Model Output Location
+### Controlling What Gets Uploaded (`meta.upload`)
 
-**Requirement**: All external models must output to the `target/` directory.
+**Requirement**: Models must declare `meta: {upload: "<path>"}` to be
+uploaded to external storage. The path is relative to `target/`.
 
-- ✅ **Correct**: `location='target/main/model_name.parquet'`
-- ❌ **Incorrect**: `location='output/model_name.parquet'`
-- ❌ **Incorrect**: `location='/absolute/path/model_name.parquet'`
+**Example (SQL model)**:
 
-The gear only uploads parquet files found under the `target/` directory. Models
-outputting to other locations will not be uploaded to external storage.
+```sql
+{{
+    config(
+        materialized='external',
+        location='target/main/model_name.parquet',
+        meta={'upload': 'main/model_name.parquet'}
+    )
+}}
+```
+
+**Example (Python model)**:
+
+```python
+def model(dbt, session):
+    dbt.config(meta={"upload": "schemas/model.schema.json"})
+    ...
+```
+
+- `meta.upload` must be a **string** path relative to `target/`.
+  Non-string values (e.g. `True`) are logged as a warning and skipped.
+- Models without `meta.upload` are **not** uploaded, regardless of
+  materialization type.
+- Works with any materialization that produces an output file:
+  `external` (parquet), or Python models that write files manually.
 
 ### Subfolder Structure Preservation
 
-**Behavior**: Subdirectory structure under `target/` is preserved when uploading.
+**Behavior**: The `meta.upload` path is used as the relative path
+when uploading to external storage.
 
 **Example**:
 
 ```sql
 -- Model A
-{{ config(location='target/staging/stg_subjects.parquet') }}
+{{ config(
+    materialized='external',
+    location='target/staging/stg_subjects.parquet',
+    meta={'upload': 'staging/stg_subjects.parquet'}
+) }}
 
 -- Model B
-{{ config(location='target/marts/subject_summary.parquet') }}
+{{ config(
+    materialized='external',
+    location='target/marts/subject_summary.parquet',
+    meta={'upload': 'marts/subject_summary.parquet'}
+) }}
 ```
 
 **Uploads to external storage as**:
@@ -510,8 +544,8 @@ outputting to other locations will not be uploaded to external storage.
     └── subject_summary.parquet
 ```
 
-This allows you to organize your outputs by schema or category while maintaining
-that structure in the destination bucket.
+This allows you to organize your outputs by schema or category while
+maintaining that structure in the destination bucket.
 
 ### Directory Auto-Creation
 
@@ -529,36 +563,47 @@ would fail if `target/main/` didn't exist.
 
 ### Materialization Types
 
-**Only external models are uploaded**: Models must use `materialized='external'`
-to be uploaded to external storage.
+**Any model with `meta.upload` is uploaded** as long as the declared
+file exists on disk. The gear does not filter by materialization type
+— it only checks for a valid `meta.upload` path and verifies the file
+is present under `target/`.
 
 **Comparison**:
 
-| Materialization | Stored In       | Uploaded to Storage? |
-| --------------- | --------------- | -------------------- |
-| `view`          | DuckDB database | No                   |
-| `table`         | DuckDB database | No                   |
-| `external`      | Parquet file    | **Yes**              |
-| `incremental`   | Not supported   | No                   |
+| Materialization  | Produces output file?       | Can be uploaded?          |
+| ---------------- | --------------------------- | ------------------------- |
+| `view`           | No (virtual, in DuckDB)     | No — no file to upload    |
+| `table` (SQL)    | No (stored in DuckDB)       | No — no file to upload    |
+| `table` (Python) | Yes, if model writes file   | **Yes** (with meta)       |
+| `external`       | Yes (parquet file)          | **Yes** (with meta)       |
+| `incremental`    | Not supported               | No                        |
 
-**Best practice**: Use `view` for intermediate transformations and `external` for
-final outputs you want to persist in external storage.
+**Note:** Python models using `materialized="table"` can manually
+write files (parquet, JSON, etc.) to the `target/` directory and
+declare `meta.upload` to have them uploaded. This is how schema
+JSON files and custom outputs are uploaded alongside data.
+
+**Best practice**: Use `view` for intermediate transformations,
+`external` (with `meta.upload`) for SQL-based final outputs, and
+Python models with `meta.upload` for custom outputs like schema
+files.
 
 ### Required Configuration
 
-**Each external model needs explicit location**:
+**Each uploadable model needs `meta.upload`**:
 
 ```sql
 {{
     config(
         materialized='external',
-        location='target/schema/model_name.parquet'
+        location='target/schema/model_name.parquet',
+        meta={'upload': 'schema/model_name.parquet'}
     )
 }}
 ```
 
-Without the `location` parameter, dbt-duckdb will choose a default location that
-may not be under `target/`, and the gear won't upload the output.
+Without `meta.upload`, the gear will not upload the model output.
+The `upload` value must be a string path relative to `target/`.
 
 ### Source Data Requirements
 
@@ -718,14 +763,15 @@ within the gear container.
 
 ### dbt run succeeds but no outputs uploaded
 
-- Check gear logs for upload phase messages
-- Verify models materialized to the target directory with `external` materialization
-- Confirm parquet files exist in `target/<schema>/` directory (e.g., `target/main/`)
+- Verify models declare `meta: {upload: "<path>"}` in their config
+- Check gear logs for "No models declared meta.upload" message
+- Confirm the file at the `meta.upload` path exists under `target/`
 - Ensure output_prefix has write permissions
 
 ### Models not creating parquet files
 
-- Verify models are configured with `materialized: external` in dbt_project.yml
+- Verify models are configured with `materialized: external`
+  in `dbt_project.yml`
 - Check that the target directory exists and is writable
 - Review dbt run output for any materialization errors
 - Ensure dbt-duckdb adapter is properly installed
