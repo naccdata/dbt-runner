@@ -666,7 +666,7 @@ wheels = [
 
 [[package]]
 name = "fw-gear-dbt-runner"
-version = "0.2.0rc1"
+version = "0.2.0"
 source = { editable = "." }
 dependencies = [
     { name = "dbt-core" },

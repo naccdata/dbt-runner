@@ -1,5 +1,49 @@
 # Release Notes
 
+## 0.2.0 [2026-03-02]
+
+__Enhancements__:
+
+- Added opt-in upload control via `meta.upload` in model config: models must
+  declare `meta: {upload: "<path>"}` to be uploaded to external storage,
+  replacing the previous automatic upload of all `external` materialization
+  models.
+- Extended upload support to any materialization type (including Python
+  `table` models) that produces an output file and declares `meta.upload`.
+- Added `pandas>=2,<3` dependency.
+- Added automated release notes CI jobs via `claude-code` integration.
+
+__Fixes__:
+
+- Fixed SQL file metadata update in `run.py` to use `sql_file.name` instead
+  of the full relative path when calling `update_file_metadata`.
+
+__Maintenance__:
+
+- Replaced `_find_external_model_outputs` and
+  `_parse_external_models_from_manifest` with `_load_manifest` and
+  `_find_uploadable_outputs` to support the `meta.upload` upload mechanism.
+- Removed fallback recursive parquet file scan when no manifest entries are
+  found.
+- Added unit tests for `_load_manifest`, `_find_uploadable_outputs`, and
+  `_upload_external_model_outputs`.
+- Added `scripts/test_fw_dataset_loading.py` integration script for
+  validating `fw-dataset` and `data-connect` compatibility.
+
+__Documentation__:
+
+- Updated `README.md` and `docs/getting_started_with_dbt.md` to reflect
+  the `meta.upload` upload model, including new examples for SQL and Python
+  models and a revised materialization support table.
+- Removed `FAQ.md` and its references from `README.md`.
+
+__Breaking Changes__:
+
+- Models that previously relied on `materialized='external'` being
+  automatically uploaded must now declare `meta: {upload: "<path>"}` in
+  their config to be uploaded. Models without `meta.upload` are silently
+  skipped.
+
 ## 0.2.0
 
 __Enhancements__:

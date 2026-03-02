@@ -35,7 +35,7 @@
     },
     "gear-builder": {
       "category": "analysis",
-      "image": "flywheel/dbt-runner:0.2.0-rc.1"
+      "image": "flywheel/dbt-runner:0.2.0"
     }
   },
   "description": "Run dbt (data build tool) projects on Flywheel datasets stored in external storage. Transforms source parquet files using user-defined dbt models and outputs results back to external storage.",
@@ -84,5 +84,5 @@
   },
   "source": "https://gitlab.com/flywheel-io/scientific-solutions/gears/dbt-runner",
   "url": "https://gitlab.com/flywheel-io/scientific-solutions/gears/dbt-runner",
-  "version": "0.2.0-rc.1"
+  "version": "0.2.0"
 }
